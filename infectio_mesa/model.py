@@ -1,17 +1,27 @@
 import mesa
 
+from enum import Enum
 
-class CellAgent(mesa.Agent):  # noqa
+
+class CellAgent(mesa.Agent):
     """
-    An agent
+    A Cell agent
     """
+
+    # Cell states
+    class CellState(Enum):
+        HEALTHY = 1
+        INFECTED = 2
+        DEAD = 3
 
     def __init__(self, unique_id, model):
-        """
-        Customize the agent
-        """
         self.unique_id = unique_id
         super().__init__(unique_id, model)
+
+        # Cell state
+        self.cell_state = CellAgent.CellState.HEALTHY
+
+
 
     def step(self):
         """
@@ -23,28 +33,24 @@ class CellAgent(mesa.Agent):  # noqa
 
 class BasicModel(mesa.Model):
     """
-    The model class holds the model-level attributes, manages the agents, and generally handles
-    the global level of our model.
-
-    There is only one model-level parameter: how many agents the model contains. When a new model
-    is started, we want it to populate itself with the given number of agents.
-
-    The scheduler is a special model component which controls the order in which agents are activated.
+    Basic infectio model class. Handles agent (cell) creation, place them
+    randomly, infects one center cell, and scheduling.
     """
 
     def __init__(self, num_agents, width, height):
         super().__init__()
         self.num_agents = num_agents
         self.schedule = mesa.time.RandomActivation(self)
-        self.grid = mesa.space.MultiGrid(width=width, height=height, torus=True)
+        self.space = mesa.space.ContinuousSpace(x_max=width, y_max=height,
+            torus=False)
 
         for i in range(self.num_agents):
             agent = CellAgent(i, self)
             self.schedule.add(agent)
 
-            x = self.random.randrange(self.grid.width)
-            y = self.random.randrange(self.grid.height)
-            self.grid.place_agent(agent, (x, y))
+            x = self.random.uniform(0, self.space.x_max)
+            y = self.random.uniform(0, self.space.y_max)
+            self.space.place_agent(agent, (x, y))
 
         # example data collector
         self.datacollector = mesa.datacollection.DataCollector()
