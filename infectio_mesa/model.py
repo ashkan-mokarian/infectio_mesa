@@ -1,35 +1,14 @@
 import mesa
 
-from enum import Enum
+from .cell import CellAgent, CellState
 
 
-class CellAgent(mesa.Agent):
-    """
-    A Cell agent
-    """
-
-    # Cell states
-    class CellState(Enum):
-        HEALTHY = 1
-        INFECTED = 2
-        DEAD = 3
-
-    def __init__(self, unique_id, model):
-        self.unique_id = unique_id
-        super().__init__(unique_id, model)
-
-        # Cell state
-        self.cell_state = CellAgent.CellState.HEALTHY
-
-
-
-    def step(self):
-        """
-        Modify this method to change what an individual agent will do during each step.
-        Can include logic based on neighbors states.
-        """
-        pass
-
+def count_infected(model):
+    reporter = {"infected": 0}
+    for c in model.schedule.agents:
+        if c.state == CellState.INFECTED:
+            reporter["infected"] += 1
+    return reporter
 
 class BasicModel(mesa.Model):
     """
@@ -40,20 +19,36 @@ class BasicModel(mesa.Model):
     def __init__(self, num_agents, width, height):
         super().__init__()
         self.num_agents = num_agents
-        self.schedule = mesa.time.RandomActivation(self)
+        
+        # By having time_infected property for each cell, we don't need to have
+        # Multiple schedulers for each state. time_infected also becomes handy
+        # For other computations
+        # self.schedule = {state: mesa.time.SimultaneousActivation(self)
+        #                  for state in CellState}
+        self.schedule = mesa.time.SimultaneousActivation(self)
+
         self.space = mesa.space.ContinuousSpace(x_max=width, y_max=height,
-            torus=False)
+            torus=True)  # TODO: remove torus, also need to change cell.move()
 
         for i in range(self.num_agents):
-            agent = CellAgent(i, self)
-            self.schedule.add(agent)
-
             x = self.random.uniform(0, self.space.x_max)
             y = self.random.uniform(0, self.space.y_max)
+            agent = CellAgent(i, self)
+            self.schedule.add(agent)
             self.space.place_agent(agent, (x, y))
+        
+        # put an infected cell in the middle
+        agent = CellAgent(i+1, self)
+        agent.infect_cell()
+        self.space.place_agent(agent, (width/2, height/2))
+        self.schedule.add(agent)
+
 
         # example data collector
-        self.datacollector = mesa.datacollection.DataCollector()
+        self.datacollector = mesa.DataCollector(
+            model_reporters={
+                "infected": lambda m: len([c for c in m.schedule.agents if c.state is CellState.INFECTED]),
+                "dead": lambda m: len([c for c in m.schedule.agents if c.state is CellState.DEAD])})
 
         self.running = True
         self.datacollector.collect(self)
