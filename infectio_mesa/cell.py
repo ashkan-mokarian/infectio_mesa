@@ -72,10 +72,18 @@ class CellAgent(mesa.Agent):
         if infection_prob > self.random.random():
             self.infect_cell()
     
+    def add_virions_via_lysis(self):
+        x, y = self.pos
+        # print(int(x), int(y), self.model.virions.u.shape)
+        self.model.virions.u[int(x), int(y)] += 20
+
     def kill_cell(self):
         assert self.state is CellState.INFECTED, "Only infected cells can die."
         self.state = CellState.DEAD
         self.time_infected = None
+
+        # Cell lysis and changing model's virions at the position with a step function
+        self.add_virions_via_lysis()
     
     def decide_to_kill(self):
         if self.state is not CellState.INFECTED:

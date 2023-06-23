@@ -1,6 +1,14 @@
 import mesa
+import numpy as np
 
 from .cell import CellAgent, CellState
+from .diffusion import Homogenous2dDiffusion
+
+# Heat Diffusion Constants
+# all the coefficient used for homogenous diffusion in one.
+# \gamma = alpha * delta_t / delta_x ** 2 where alpha is the diffusion constant
+GAMMA = 0.2
+virions_diffusion_time_steps_per_each_model_step = 10
 
 
 def count_infected(model):
@@ -29,8 +37,12 @@ class BasicModel(mesa.Model):
 
         self.space = mesa.space.ContinuousSpace(x_max=width, y_max=height,
             torus=True)  # TODO: remove torus, also need to change cell.move()
+        
+        # Virions in space, used for molecular diffusion
+        self.virions = Homogenous2dDiffusion(GAMMA, width, height, virions_diffusion_time_steps_per_each_model_step)
+        
 
-        for i in range(self.num_agents):
+        for i in range(self.num_agents - 1):
             x = self.random.uniform(0, self.space.x_max)
             y = self.random.uniform(0, self.space.y_max)
             agent = CellAgent(i, self)
@@ -58,4 +70,6 @@ class BasicModel(mesa.Model):
         A model step. Used for collecting data and advancing the schedule
         """
         self.datacollector.collect(self)
+        self.virions.step() # Virion diffusion step
+        # print('min', self.virions.u.min(), 'max', self.virions.u.max())
         self.schedule.step()
