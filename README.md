@@ -3,6 +3,8 @@ infectio_mesa
 
 Virus spread simulation using ABM (in mesa) implementing simple Random walk cell motility.
 
+![sample output](./attachments/sample_output.gif)
+
 # How to run
 Or:
 
