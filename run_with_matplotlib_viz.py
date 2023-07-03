@@ -1,6 +1,7 @@
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 from infectio_mesa.model import BasicModel
 from infectio_mesa.cell import CellState
@@ -8,6 +9,8 @@ from infectio_mesa.cell import CellState
 MAX_SIM_ITER = 500
 
 if __name__ == '__main__':
+    file_name = "output/plots/plot_{}.png"
+    # os.makedirs(file_name.format(0), exist_ok=True)
     start_time = time.perf_counter()
     model = BasicModel(2000, 500, 500)
 
@@ -23,14 +26,14 @@ if __name__ == '__main__':
 
     state_lists = {k: [] for k in CellState}
     style = {
-        CellState.HEALTHY: 'ob',
+        CellState.SUSCEPTIBLE: 'ob',
         CellState.INFECTED: 'og',
-        CellState.DEAD: 'ok'
+        CellState.REMOVED: 'ok'
     }
 
     # Line plots
     steps = []
-    num_lists = {k: [] for k in CellState if k is not CellState.HEALTHY}
+    num_lists = {k: [] for k in CellState if k is not CellState.REMOVED}
 
     colorbar = None
     for t in range(MAX_SIM_ITER):
@@ -69,12 +72,13 @@ if __name__ == '__main__':
             # colorbar.ax.yaxis.set_ticks([])
             # colorbar.ax.yaxis.set_ticklabels([])
 
-            diff_plot.set_clim(0, 2)
+            # diff_plot.set_clim(0, 0.5)
         # diff_plot.set_clim(vmin=np.min(model.virions.u), vmax=np.max(model.virions.u))
             
         # line.set_data(t, len(state_lists[CellState.INFECTED]))
         
         plt.draw()
+        # plt.savefig(file_name.format(t))
         model.step()
         plt.pause(0.000001)
     print(f"Elapsed time: {time.perf_counter() - start_time:.3f}")

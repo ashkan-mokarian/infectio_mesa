@@ -8,7 +8,7 @@ from .diffusion import Homogenous2dDiffusion
 # all the coefficient used for homogenous diffusion in one.
 # \gamma = alpha * delta_t / delta_x ** 2 where alpha is the diffusion constant
 GAMMA = 0.2
-virions_diffusion_time_steps_per_each_model_step = 10
+virions_diffusion_time_steps_per_each_model_step = 30
 
 
 def count_infected(model):
@@ -59,8 +59,7 @@ class BasicModel(mesa.Model):
         # example data collector
         self.datacollector = mesa.DataCollector(
             model_reporters={
-                "infected": lambda m: len([c for c in m.schedule.agents if c.state is CellState.INFECTED]),
-                "dead": lambda m: len([c for c in m.schedule.agents if c.state is CellState.DEAD])})
+                "infected": lambda m: len([c for c in m.schedule.agents if c.state is CellState.INFECTED])})
 
         self.running = True
         self.datacollector.collect(self)

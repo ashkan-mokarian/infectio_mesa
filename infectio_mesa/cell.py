@@ -5,15 +5,15 @@ import mesa
 
 # Cell states
 class CellState(Enum):
-    HEALTHY = 1
+    SUSCEPTIBLE = 1
     INFECTED = 2
-    DEAD = 3
+    REMOVED = 3
 
 def cell_speed(cell_state: CellState):
     return {
-        CellState.HEALTHY: 1,
+        CellState.SUSCEPTIBLE: 1,
         CellState.INFECTED: 5,
-        CellState.DEAD: 0
+        CellState.REMOVED: 0
     }[cell_state]
 
 # Search radius for deciding cell-cell infection rate based on number of
@@ -36,7 +36,7 @@ class CellAgent(mesa.Agent):
         super().__init__(unique_id, model)
 
         # Cell state
-        self.state = CellState.HEALTHY
+        self.state = CellState.SUSCEPTIBLE
         self.time_infected = None
     
     @property
@@ -52,13 +52,13 @@ class CellAgent(mesa.Agent):
         self.model.space.move_agent(self, new_pos)
     
     def infect_cell(self):
-        assert self.state is CellState.HEALTHY, "Only healthy cells can get infected."
+        assert self.state is CellState.SUSCEPTIBLE, "Only healthy cells can get infected."
         self.state = CellState.INFECTED
         self.time_infected = 0
 
     def decide_to_infect(self):
         """Randomly infect healthy cells based on proximity to other infected cells."""
-        if self.state is not CellState.HEALTHY:
+        if self.state is not CellState.SUSCEPTIBLE:
             return
         # Simple cell-cell infection only based on numbers
         infected_neighbors = [c for c in self.model.space.get_neighbors(
@@ -73,23 +73,26 @@ class CellAgent(mesa.Agent):
             self.infect_cell()
     
     def add_virions_via_lysis(self):
-        x, y = self.pos
+        # x, y = self.pos
         # print(int(x), int(y), self.model.virions.u.shape)
-        self.model.virions.u[int(x), int(y)] += 20
+        # self.model.virions.u[int(x), int(y)] += 20
+        pass
 
     def kill_cell(self):
-        assert self.state is CellState.INFECTED, "Only infected cells can die."
-        self.state = CellState.DEAD
-        self.time_infected = None
+        # assert self.state is CellState.INFECTED, "Only infected cells can die."
+        # self.state = CellState.DEAD
+        # self.time_infected = None
+        pass
 
         # Cell lysis and changing model's virions at the position with a step function
-        self.add_virions_via_lysis()
+        # self.add_virions_via_lysis()
     
     def decide_to_kill(self):
-        if self.state is not CellState.INFECTED:
-            return
-        if self.time_infected > 50:
-            self.kill_cell()
+        # if self.state is not CellState.INFECTED:
+        #     return
+        # if self.time_infected > 50:
+        #     self.kill_cell()
+        pass
 
     def step(self):
         """
@@ -97,9 +100,12 @@ class CellAgent(mesa.Agent):
         Can include logic based on neighbors states.
         """
         self.decide_to_infect()
-        self.decide_to_kill()
+        # self.decide_to_kill()
     
     def advance(self) -> None:
         self.move()
         if self.state is CellState.INFECTED:
             self.time_infected += 1
+            x, y = self.pos
+            self.model.virions.u[int(x), int(y)] += 1
+
